@@ -45,6 +45,7 @@ android {
     androidResources {
         noCompress 'lite'
     }
+    namespace 'com.android.example.camerax.tflite'
 }
 
 dependencies {
