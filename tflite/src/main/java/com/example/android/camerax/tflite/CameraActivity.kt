@@ -74,28 +74,26 @@ class CameraActivity : AppCompatActivity() {
 
     private val tfImageProcessor by lazy {
         val cropSize = minOf(bitmapBuffer.width, bitmapBuffer.height)
-        ImageProcessor.Builder()
-            .add(ResizeWithCropOrPadOp(cropSize, cropSize))
-            .add(ResizeOp(
-                tfInputSize.height, tfInputSize.width, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
-            .add(Rot90Op(-imageRotationDegrees / 90))
-            .add(NormalizeOp(0f, 1f))
-            .build()
+        ImageProcessor.Builder().add(ResizeWithCropOrPadOp(cropSize, cropSize)).add(
+            ResizeOp(
+                tfInputSize.height, tfInputSize.width, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR
+            )
+        ).add(Rot90Op(-imageRotationDegrees / 90)).add(NormalizeOp(0f, 1f)).build()
     }
 
-    private val nnApiDelegate by lazy  {
+    private val nnApiDelegate by lazy {
         NnApiDelegate()
     }
 
     private val tflite by lazy {
         Interpreter(
             FileUtil.loadMappedFile(this, MODEL_PATH),
-            Interpreter.Options().addDelegate(nnApiDelegate))
+            Interpreter.Options().addDelegate(nnApiDelegate)
+        )
     }
     private val detector by lazy {
         ObjectDetectionHelper(
-            tflite,
-            FileUtil.loadLabels(this, LABELS_PATH)
+            tflite, FileUtil.loadLabels(this, LABELS_PATH)
         )
     }
 
@@ -128,7 +126,8 @@ class CameraActivity : AppCompatActivity() {
                     if (isFrontFacing) postScale(-1f, 1f)
                 }
                 val uprightImage = Bitmap.createBitmap(
-                    bitmapBuffer, 0, 0, bitmapBuffer.width, bitmapBuffer.height, matrix, true)
+                    bitmapBuffer, 0, 0, bitmapBuffer.width, bitmapBuffer.height, matrix, true
+                )
                 activityCameraBinding.imagePredicted.setImageBitmap(uprightImage)
                 activityCameraBinding.imagePredicted.visibility = View.VISIBLE
             }
@@ -158,24 +157,20 @@ class CameraActivity : AppCompatActivity() {
     private fun bindCameraUseCases() = activityCameraBinding.viewFinder.post {
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener ({
+        cameraProviderFuture.addListener({
 
             // Camera provider is now guaranteed to be available
             val cameraProvider = cameraProviderFuture.get()
 
             // Set up the view finder use case to display camera preview
-            val preview = Preview.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(activityCameraBinding.viewFinder.display.rotation)
-                .build()
+            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetRotation(activityCameraBinding.viewFinder.display.rotation).build()
 
             // Set up the image analysis use case which will process frames in real time
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+            val imageAnalysis = ImageAnalysis.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setTargetRotation(activityCameraBinding.viewFinder.display.rotation)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                .build()
+                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888).build()
 
             var frameCounter = 0
             var lastFpsTimestamp = System.currentTimeMillis()
@@ -186,7 +181,8 @@ class CameraActivity : AppCompatActivity() {
                     // the analyzer has started running
                     imageRotationDegrees = image.imageInfo.rotationDegrees
                     bitmapBuffer = Bitmap.createBitmap(
-                        image.width, image.height, Bitmap.Config.ARGB_8888)
+                        image.width, image.height, Bitmap.Config.ARGB_8888
+                    )
                 }
 
                 // Early exit: image analysis is in paused state
@@ -196,10 +192,10 @@ class CameraActivity : AppCompatActivity() {
                 }
 
                 // Copy out RGB bits to our shared buffer
-                image.use { bitmapBuffer.copyPixelsFromBuffer(image.planes[0].buffer)  }
+                image.use { bitmapBuffer.copyPixelsFromBuffer(image.planes[0].buffer) }
 
                 // Process the image in Tensorflow
-                val tfImage =  tfImageProcessor.process(tfImageBuffer.apply { load(bitmapBuffer) })
+                val tfImage = tfImageProcessor.process(tfImageBuffer.apply { load(bitmapBuffer) })
 
                 // Perform the object detection for the current frame
                 val predictions = detector.predict(tfImage)
@@ -214,7 +210,10 @@ class CameraActivity : AppCompatActivity() {
                     val now = System.currentTimeMillis()
                     val delta = now - lastFpsTimestamp
                     val fps = 1000 * frameCount.toFloat() / delta
-                    Log.d(TAG, "FPS: ${"%.02f".format(fps)} with tensorSize: ${tfImage.width} x ${tfImage.height}")
+                    Log.d(
+                        TAG,
+                        "FPS: ${"%.02f".format(fps)} with tensorSize: ${tfImage.width} x ${tfImage.height}"
+                    )
                     lastFpsTimestamp = now
                 }
             })
@@ -225,7 +224,8 @@ class CameraActivity : AppCompatActivity() {
             // Apply declared configs to CameraX using the same lifecycle owner
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(
-                this as LifecycleOwner, cameraSelector, preview, imageAnalysis)
+                this as LifecycleOwner, cameraSelector, preview, imageAnalysis
+            )
 
             // Use the camera object to link our preview use case with the view
             preview.setSurfaceProvider(activityCameraBinding.viewFinder.surfaceProvider)
@@ -248,12 +248,19 @@ class CameraActivity : AppCompatActivity() {
         val location = mapOutputCoordinates(prediction.location)
 
         // Update the text and UI
-        activityCameraBinding.textPrediction.text = "${"%.2f".format(prediction.score)} ${prediction.label}"
+        activityCameraBinding.textPrediction.text =
+            "${"%.2f".format(prediction.score)} ${prediction.label}"
         (activityCameraBinding.boxPrediction.layoutParams as ViewGroup.MarginLayoutParams).apply {
             topMargin = location.top.toInt()
             leftMargin = location.left.toInt()
-            width = min(activityCameraBinding.viewFinder.width, location.right.toInt() - location.left.toInt())
-            height = min(activityCameraBinding.viewFinder.height, location.bottom.toInt() - location.top.toInt())
+            width = min(
+                activityCameraBinding.viewFinder.width,
+                location.right.toInt() - location.left.toInt()
+            )
+            height = min(
+                activityCameraBinding.viewFinder.height,
+                location.bottom.toInt() - location.top.toInt()
+            )
         }
 
         // Make sure all UI elements are visible
@@ -282,7 +289,8 @@ class CameraActivity : AppCompatActivity() {
                 activityCameraBinding.viewFinder.width - previewLocation.right,
                 previewLocation.top,
                 activityCameraBinding.viewFinder.width - previewLocation.left,
-                previewLocation.bottom)
+                previewLocation.bottom
+            )
         } else {
             previewLocation
         }
@@ -315,16 +323,15 @@ class CameraActivity : AppCompatActivity() {
         // Request permissions each time the app resumes, since they can be revoked at any time
         if (!hasPermissions(this)) {
             ActivityCompat.requestPermissions(
-                this, permissions.toTypedArray(), permissionsRequestCode)
+                this, permissions.toTypedArray(), permissionsRequestCode
+            )
         } else {
             bindCameraUseCases()
         }
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == permissionsRequestCode && hasPermissions(this)) {
