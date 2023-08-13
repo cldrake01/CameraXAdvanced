@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.example.mlkit.kotlin
+package com.example.android.camerax.tflite
 
 import android.app.Activity
 import android.content.Context
