@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.example.mlkit.kotlin
+package com.example.android.camerax.tflite
 
 import androidx.appcompat.app.AppCompatActivity
 import com.google.mlkit.vision.common.InputImage
@@ -32,30 +32,17 @@ class TextRecognitionActivity : AppCompatActivity() {
         // [END get_detector_default]
 
         // [START run_detector]
-        val result = recognizer.process(image)
-                .addOnSuccessListener { visionText ->
-                    // Task completed successfully
-                    // [START_EXCLUDE]
-                    // [START get_text]
-                    for (block in visionText.textBlocks) {
-                        val boundingBox = block.boundingBox
-                        val cornerPoints = block.cornerPoints
-                        val text = block.text
-
-                        for (line in block.lines) {
-                            // ...
-                            for (element in line.elements) {
-                                // ...
-                            }
-                        }
-                    }
-                    // [END get_text]
-                    // [END_EXCLUDE]
-                }
-                .addOnFailureListener { e ->
-                    // Task failed with an exception
-                    // ...
-                }
+        val result = recognizer.process(image).addOnSuccessListener { visionText ->
+            // Task completed successfully
+            // [START_EXCLUDE]
+            // [START get_text]
+            processTextBlock(visionText)
+            // [END get_text]
+            // [END_EXCLUDE]
+        }.addOnFailureListener { e ->
+            // Task failed with an exception
+            // ...
+        }
         // [END run_detector]
     }
 
@@ -64,21 +51,31 @@ class TextRecognitionActivity : AppCompatActivity() {
         val resultText = result.text
         for (block in result.textBlocks) {
             val blockText = block.text
-            val blockCornerPoints = block.cornerPoints
-            val blockFrame = block.boundingBox
-            for (line in block.lines) {
-                val lineText = line.text
-                val lineCornerPoints = line.cornerPoints
-                val lineFrame = line.boundingBox
-                for (element in line.elements) {
-                    val elementText = element.text
-                    val elementCornerPoints = element.cornerPoints
-                    val elementFrame = element.boundingBox
-                }
-            }
+            println(blockText)
         }
         // [END mlkit_process_text_block]
     }
+
+//    private fun processTextBlock(result: Text) {
+//        // [START mlkit_process_text_block]
+//        val resultText = result.text
+//        for (block in result.textBlocks) {
+//            val blockText = block.text
+//            val blockCornerPoints = block.cornerPoints
+//            val blockFrame = block.boundingBox
+//            for (line in block.lines) {
+//                val lineText = line.text
+//                val lineCornerPoints = line.cornerPoints
+//                val lineFrame = line.boundingBox
+//                for (element in line.elements) {
+//                    val elementText = element.text
+//                    val elementCornerPoints = element.cornerPoints
+//                    val elementFrame = element.boundingBox
+//                }
+//            }
+//        }
+//        // [END mlkit_process_text_block]
+//    }
 
     private fun getTextRecognizer(): TextRecognizer {
         // [START mlkit_local_doc_recognizer]

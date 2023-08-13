@@ -56,11 +56,9 @@ class MLKitVisionImage {
         // [END set_metadata]
         // [START image_from_buffer]
         val image = InputImage.fromByteBuffer(
-                byteBuffer,
-                /* image width */ 480,
-                /* image height */ 360,
-                rotationDegrees,
-                InputImage.IMAGE_FORMAT_NV21 // or IMAGE_FORMAT_YV12
+            byteBuffer,/* image width */
+            480,/* image height */
+            360, rotationDegrees, InputImage.IMAGE_FORMAT_NV21 // or IMAGE_FORMAT_YV12
         )
         // [END image_from_buffer]
     }
@@ -68,11 +66,9 @@ class MLKitVisionImage {
     private fun imageFromArray(byteArray: ByteArray, rotationDegrees: Int) {
         // [START image_from_array]
         val image = InputImage.fromByteArray(
-                byteArray,
-                /* image width */ 480,
-                /* image height */ 360,
-                rotationDegrees,
-                InputImage.IMAGE_FORMAT_NV21 // or IMAGE_FORMAT_YV12
+            byteArray,/* image width */
+            480,/* image height */
+            360, rotationDegrees, InputImage.IMAGE_FORMAT_NV21 // or IMAGE_FORMAT_YV12
         )
 
         // [END image_from_array]
@@ -96,7 +92,9 @@ class MLKitVisionImage {
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Throws(CameraAccessException::class)
-    private fun getRotationCompensation(cameraId: String, activity: Activity, isFrontFacing: Boolean): Int {
+    private fun getRotationCompensation(
+        cameraId: String, activity: Activity, isFrontFacing: Boolean
+    ): Int {
         // Get the device's current rotation relative to its "native" orientation.
         // Then, from the ORIENTATIONS table, look up the angle the image must be
         // rotated to compensate for the device's rotation.
@@ -105,9 +103,8 @@ class MLKitVisionImage {
 
         // Get the device's sensor orientation.
         val cameraManager = activity.getSystemService(CAMERA_SERVICE) as CameraManager
-        val sensorOrientation = cameraManager
-                .getCameraCharacteristics(cameraId)
-                .get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+        val sensorOrientation = cameraManager.getCameraCharacteristics(cameraId)
+            .get(CameraCharacteristics.SENSOR_ORIENTATION)!!
 
         if (isFrontFacing) {
             rotationCompensation = (sensorOrientation + rotationCompensation) % 360
